@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 """
 Windows .ico 아이콘 파일 생성 (PIL 없이 순수 파이썬)
 """
-import struct, zlib, os, math
+import sys, struct, zlib, os, math
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 def make_png(size):
     """순수 파이썬으로 재고관리 아이콘 PNG 바이트 생성"""
@@ -118,7 +120,7 @@ def create_ico(output_path):
     sizes = [16, 32, 48, 64, 128, 256]
     png_list = []
 
-    print("  아이콘 크기 생성 중...")
+    print("  아이콘 크기 생성 중...", flush=True)
     for s in sizes:
         print(f"    {s}x{s}...", end="", flush=True)
         png_data = make_png(s)
@@ -157,11 +159,11 @@ def create_ico(output_path):
         f.write(ico_data)
 
     size_kb = len(ico_data) / 1024
-    print(f"  ✅ {output_path} ({size_kb:.1f} KB)")
+    print(f"  OK: {output_path} ({size_kb:.1f} KB)")
 
 
 if __name__ == "__main__":
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "inventory.ico")
-    print("🎨 Windows 아이콘(.ico) 생성 중...")
+    print("Windows 아이콘(.ico) 생성 중...")
     create_ico(out)
     print("완료!")
