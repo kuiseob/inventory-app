@@ -34,7 +34,7 @@ jobs:
           pyinstaller `
             --onefile `
             --windowed `
-            --name="inventory" `
+            --name="product" `
             --icon=inventory.ico `
             --hidden-import=matplotlib `
             --hidden-import=matplotlib.backends.backend_tkagg `
@@ -42,9 +42,8 @@ jobs:
             --hidden-import=tkinter.ttk `
             inventory_app.py
 
-      - name: EXE 파일명 변경
-        run: |
-          Copy-Item "dist\inventory.exe" "dist\재고관리.exe"
+      - name: EXE 파일 확인
+        run: dir dist\
 
       - name: 버전 태그 생성
         id: tag
@@ -68,8 +67,6 @@ jobs:
             - BOM 기반 생산 처리
             - 입출고 이력 조회
             - 재고 분석 그래프
-          files: |
-            dist/재고관리.exe
-            dist/inventory.exe
+          files: dist/product.exe
           draft: false
           prerelease: false
