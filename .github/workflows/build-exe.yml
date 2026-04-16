@@ -34,13 +34,17 @@ jobs:
           pyinstaller `
             --onefile `
             --windowed `
-            --name="재고관리" `
+            --name="inventory" `
             --icon=inventory.ico `
             --hidden-import=matplotlib `
             --hidden-import=matplotlib.backends.backend_tkagg `
             --hidden-import=tkinter `
             --hidden-import=tkinter.ttk `
             inventory_app.py
+
+      - name: EXE 파일명 변경
+        run: |
+          Copy-Item "dist\inventory.exe" "dist\재고관리.exe"
 
       - name: 버전 태그 생성
         id: tag
@@ -56,15 +60,16 @@ jobs:
           body: |
             ## 재고관리 시스템 Windows 실행파일
 
-            ### 사용 방법
-            1. 아래 **재고관리.exe** 를 다운로드
-            2. 더블클릭으로 실행
+            ### 다운로드
+            아래 **Assets** 에서 **재고관리.exe** 클릭
 
             ### 주요 기능
             - 원자재 / 반제품 / 완제품 재고 관리
             - BOM 기반 생산 처리
             - 입출고 이력 조회
             - 재고 분석 그래프
-          files: dist/재고관리.exe
+          files: |
+            dist/재고관리.exe
+            dist/inventory.exe
           draft: false
           prerelease: false
