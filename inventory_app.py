@@ -6,11 +6,13 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
 
-# Windows 인코딩 문제 해결
+# Windows 인코딩 문제 해결 (windowed 앱은 stdout이 None)
 if sys.platform == "win32":
     import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+    if sys.stdout is not None:
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    if sys.stderr is not None:
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 from collections import defaultdict
 
 try:
