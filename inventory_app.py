@@ -1,8 +1,16 @@
+# -*- coding: utf-8 -*-
 import json
 import os
+import sys
 import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
+
+# Windows 인코딩 문제 해결
+if sys.platform == "win32":
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 from collections import defaultdict
 
 try:
@@ -167,7 +175,7 @@ class MfgApp:
         # ① 최상단 앱 헤더
         header = tk.Frame(self.root, bg=C["header"], pady=10)
         header.pack(fill=tk.X)
-        tk.Label(header, text="  ⚙  제조업 재고관리 시스템",
+        tk.Label(header, text="  제조업 재고관리 시스템",
                  font=("맑은 고딕",15,"bold"), bg=C["header"], fg="white").pack(side=tk.LEFT)
         self.clock_lbl = tk.Label(header, font=("맑은 고딕",10),
                                   bg=C["header"], fg="#90CAF9")
@@ -219,7 +227,7 @@ class MfgApp:
         self._switch_tab("재고 현황", self._show_dash)
 
     def _tick(self):
-        self.clock_lbl.config(text=datetime.now().strftime("📅 %Y-%m-%d  🕐 %H:%M:%S"))
+        self.clock_lbl.config(text=datetime.now().strftime("%Y-%m-%d  %H:%M:%S"))
         self.root.after(1000, self._tick)
 
     def _switch_tab(self, name, cmd):
@@ -242,13 +250,13 @@ class MfgApp:
 
     # ── 재고 현황 탭 ─────────────────────────────────────────
     def _build_dash(self, f):
-        section_header(f, "📦  전체 재고 현황", C["dash"])
+        section_header(f, "[재고]  전체 재고 현황", C["dash"])
 
         self.dash_trees = {}
         container = tk.Frame(f, bg=C["bg"])
         container.pack(fill=tk.BOTH, expand=True, padx=12, pady=4)
 
-        icons = {"원자재":"🔩","반제품":"🔧","완제품":"📦"}
+        icons = {"원자재":"[원]","반제품":"[반]","완제품":"[완]"}
         for t in TYPES:
             fg, bg = TYPE_BADGE[t]
             lf = tk.LabelFrame(container,
@@ -294,8 +302,8 @@ class MfgApp:
                 low_list.append(item["name"])
         n = len(self.db["items"])
         self.dash_status.set(
-            f"  총 {n}개 품목  |  ⚠ 안전재고 미달: {len(low_list)}개"
-            + (f"  →  {', '.join(low_list[:6])}" if low_list else "  ✅ 이상 없음"))
+            f"  총 {n}개 품목  |   안전재고 미달: {len(low_list)}개"
+            + (f"  →  {', '.join(low_list[:6])}" if low_list else "  [OK] 이상 없음"))
 
     # ── 품목 관리 탭 ─────────────────────────────────────────
     def _build_items(self, f):
@@ -303,10 +311,10 @@ class MfgApp:
         bf = tk.Frame(f, bg=C["items"], pady=8)
         bf.pack(fill=tk.X)
         for label, cmd, bg in [
-            ("＋  품목 추가", self.add_item,    "#43A047"),
-            ("✏  수정",      self.edit_item,   "#1E88E5"),
-            ("🗑  삭제",      self.delete_item, "#E53935"),
-            ("⚙  BOM 설정", self.edit_bom,    "#8E24AA"),
+            ("+ 품목 추가", self.add_item,    "#43A047"),
+            ("수정",      self.edit_item,   "#1E88E5"),
+            ("삭제",      self.delete_item, "#E53935"),
+            ("BOM 설정", self.edit_bom,    "#8E24AA"),
         ]:
             make_btn(bf, label, cmd, bg).pack(side=tk.LEFT, padx=6, pady=2)
 
@@ -320,7 +328,7 @@ class MfgApp:
                      width=10, font=("맑은 고딕",11)).pack(side=tk.LEFT, padx=6)
         self.filter_type.trace_add("write", lambda *_: self.refresh_items())
 
-        tk.Label(sf, text="🔍 실시간 검색:", font=("맑은 고딕",11), bg="#E8EAF6").pack(side=tk.LEFT, padx=(12,4))
+        tk.Label(sf, text="검색:", font=("맑은 고딕",11), bg="#E8EAF6").pack(side=tk.LEFT, padx=(12,4))
         self.item_search = tk.StringVar()
         self.item_search.trace_add("write", lambda *_: self.refresh_items())
         e = make_entry(sf, self.item_search, width=22)
@@ -411,7 +419,7 @@ class MfgApp:
 
     # ── 생산 처리 탭 ─────────────────────────────────────────
     def _build_prod(self, f):
-        section_header(f, "🏭  생산 처리 — BOM 기반 자동 원자재 차감", C["prod"])
+        section_header(f, "[생산]  생산 처리 - BOM 기반 자동 원자재 차감", C["prod"])
 
         form = tk.Frame(f, bg=C["bg"], padx=20, pady=12)
         form.pack(fill=tk.X)
@@ -437,11 +445,11 @@ class MfgApp:
         ne = make_entry(form, self.prod_note_var, width=32)
         row(2,"비고:", ne)
 
-        make_btn(form,"▶  생산 실행",self.do_produce,C["prod"],pad=(18,8)).grid(
+        make_btn(form,">> 생산 실행",self.do_produce,C["prod"],pad=(18,8)).grid(
             row=3, column=1, padx=10, pady=10, sticky=tk.W)
 
         # BOM 미리보기
-        section_header(f, "📋  BOM 소요 자재 (실시간 미리보기)", C["prod"])
+        section_header(f, "[BOM]  소요 자재 (실시간 미리보기)", C["prod"])
         cols = ("품목명","필요수량(1개당)","현재재고","단위","생산 가능 여부")
         self.bom_tree = self._make_tree(f, cols, [220,130,100,60,130])
         self.bom_tree.tag_configure("ok",   background=C["prod_bg"])
@@ -464,7 +472,7 @@ class MfgApp:
             need = e["qty"]*pq; stock = mat["quantity"]; ok = stock>=need
             t.insert("","end",values=(
                 mat["name"], e["qty"], stock, mat["unit"],
-                "✅ 가능" if ok else f"❌ 부족 ({stock}/{need:.1f})"),
+                "가능" if ok else f"부족 ({stock}/{need:.1f})"),
                 tags=("ok" if ok else "lack",))
 
     def do_produce(self):
@@ -494,7 +502,7 @@ class MfgApp:
         self.db["items"][iid]["quantity"] += qty
         add_history(self.db,"생산완료",iid,name,qty,note)
         save(self.db); self.refresh_all()
-        messagebox.showinfo("생산 완료",f"✅ '{name}' {qty}{self.db['items'][iid]['unit']} 생산 완료.")
+        messagebox.showinfo("생산 완료",f" '{name}' {qty}{self.db['items'][iid]['unit']} 생산 완료.")
 
     # ── 입출고 탭 ────────────────────────────────────────────
     def _build_io(self, f):
@@ -503,7 +511,7 @@ class MfgApp:
         top.pack(fill=tk.X, padx=12, pady=8)
 
         for col_idx, (io_type, color, icon) in enumerate([
-            ("입고", "#1565C0","📥"), ("출고","#C62828","📤")
+            ("입고", "#1565C0","[입고]"), ("출고","#C62828","[출고]")
         ]):
             pf = tk.LabelFrame(top, text=f"  {icon}  {io_type}  ",
                                font=("맑은 고딕",12,"bold"),
@@ -539,7 +547,7 @@ class MfgApp:
                      color, pad=(16,7)).grid(row=3,column=1,pady=10,sticky=tk.W)
 
         # 최근 이력
-        section_header(f,"🕐  최근 입출고 이력", C["io"])
+        section_header(f,"[이력]  최근 입출고 이력", C["io"])
         cols = ("일시","구분","품목명","수량","비고")
         self.io_hist_tree = self._make_tree(f, cols, [150,70,220,80,260])
         self.io_hist_tree.tag_configure("입고", background=C["in_bg"])
@@ -563,7 +571,7 @@ class MfgApp:
         item["quantity"] += delta
         add_history(self.db, io_type, iid, name, delta, note)
         save(self.db); self.refresh_all()
-        messagebox.showinfo("완료",f"{'📥' if io_type=='입고' else '📤'} {io_type} 완료\n{name}  {qty}{item['unit']}")
+        messagebox.showinfo("완료",f"{'' if io_type=='입고' else ''} {io_type} 완료\n{name}  {qty}{item['unit']}")
 
     def refresh_io_hist(self):
         t = self.io_hist_tree
@@ -575,7 +583,7 @@ class MfgApp:
 
     # ── 이력 조회 탭 ─────────────────────────────────────────
     def _build_hist(self, f):
-        section_header(f,"📜  전체 입출고 · 생산 이력", C["hist"])
+        section_header(f,"[이력]  전체 입출고 / 생산 이력", C["hist"])
 
         flt = tk.Frame(f, bg="#ECEFF1", pady=7)
         flt.pack(fill=tk.X)
@@ -586,7 +594,7 @@ class MfgApp:
                      state="readonly", width=12, font=("맑은 고딕",11)).pack(side=tk.LEFT,padx=6)
         self.hist_filter.trace_add("write", lambda *_: self.refresh_hist())
 
-        tk.Label(flt, text="🔍 품목명:", font=("맑은 고딕",11), bg="#ECEFF1").pack(side=tk.LEFT, padx=(12,4))
+        tk.Label(flt, text="품목명:", font=("맑은 고딕",11), bg="#ECEFF1").pack(side=tk.LEFT, padx=(12,4))
         self.hist_search = tk.StringVar()
         self.hist_search.trace_add("write", lambda *_: self.refresh_hist())
         make_entry(flt, self.hist_search, width=20).pack(side=tk.LEFT, padx=4)
@@ -615,7 +623,7 @@ class MfgApp:
 
     # ── 그래프 탭 ────────────────────────────────────────────
     def _build_graph(self, f):
-        section_header(f,"📊  재고 분석 그래프", C["graph"])
+        section_header(f,"[그래프]  재고 분석 그래프", C["graph"])
 
         ctrl = tk.Frame(f, bg="#E0F2F1", pady=7)
         ctrl.pack(fill=tk.X)
@@ -627,7 +635,7 @@ class MfgApp:
                           state="readonly", width=22, font=("맑은 고딕",11))
         cb.pack(side=tk.LEFT, padx=6)
         cb.bind("<<ComboboxSelected>>", lambda e: self.refresh_graph())
-        make_btn(ctrl,"🔄 새로고침",self.refresh_graph,C["graph"],pad=(12,5)).pack(side=tk.LEFT,padx=8)
+        make_btn(ctrl,"새로고침",self.refresh_graph,C["graph"],pad=(12,5)).pack(side=tk.LEFT,padx=8)
 
         self.graph_frame = tk.Frame(f, bg=C["bg"])
         self.graph_frame.pack(fill=tk.BOTH, expand=True, padx=12, pady=6)
@@ -798,7 +806,7 @@ class BomDialog(tk.Toplevel):
     def _build(self):
         hf = tk.Frame(self, bg=C["items"])
         hf.pack(fill=tk.X)
-        tk.Label(hf, text=f"  ⚙  BOM 설정  —  {self.db['items'][self.item_id]['name']}",
+        tk.Label(hf, text=f"  BOM 설정 - {self.db['items'][self.item_id]['name']}",
                  font=("맑은 고딕",12,"bold"), bg=C["items"], fg="white", pady=10).pack(anchor=tk.W)
 
         cols=("품목명","분류","단위","소요수량(1개당)")
@@ -828,7 +836,7 @@ class BomDialog(tk.Toplevel):
         make_btn(af,"추가",self._add,"#1565C0",pad=(10,5)).pack(side=tk.LEFT,padx=6)
         make_btn(af,"선택삭제",self._del,"#C62828",pad=(10,5)).pack(side=tk.LEFT)
 
-        make_btn(self,"💾  저장 후 닫기",self.destroy,C["items"],pad=(16,8)).pack(pady=10)
+        make_btn(self,"저장 후 닫기",self.destroy,C["items"],pad=(16,8)).pack(pady=10)
 
     def _name_to_id(self,name):
         for iid,v in self._cand.items():
